@@ -181,6 +181,16 @@ tmap_mode("view")
     tmap mode set to interactive viewing
 
 ``` r
+# Install mastermapr dependency:
+remotes::install_github("acteng/mastermapr")
+```
+
+    Using github PAT from envvar GITHUB_PAT
+
+    Skipping install of 'mastermapr' from a github remote, the SHA1 (8ca6fd61) has not changed since last install.
+      Use `force = TRUE` to force installation
+
+``` r
 gdf_list = jsonlite::read_json("data/AA_example_links.json")
 str(gdf_list[[1]][[1]])
 ```
@@ -278,3 +288,68 @@ qtm(sf_linestring)
 ![](README_files/figure-commonmark/unnamed-chunk-14-1.png)
 
 ## Iterate for all links and visualise network
+
+First we’ll generalise the previous code to a function:
+
+``` r
+link_coordinates = function(link) {
+    # get origin and destination coordinates:
+    gdf_origin_coords = c(
+        link[[8]][[1]],
+        link[[8]][[2]]
+        )
+    gdf_destination_coords = c(
+        link[[9]][[1]],
+        link[[9]][[2]]
+        )
+    # create matrix of coordinates:
+    gdf_matrix = rbind(gdf_origin_coords, gdf_destination_coords)
+    # create linestring:
+    gdf_linestring = sf::st_linestring(gdf_matrix)
+    # create sfc:
+    sfc_linestring = sf::st_sfc(gdf_linestring)
+    # create sf:
+    sf_linestring = sf::st_as_sf(sfc_linestring)
+    return(sf_linestring)
+}
+# Test the function with the first link:
+link_coordinates(gdf_list[[1]][[1]])
+```
+
+    Simple feature collection with 1 feature and 0 fields
+    Geometry type: LINESTRING
+    Dimension:     XY
+    Bounding box:  xmin: -3.035828 ymin: 53.81767 xmax: -3.03542 ymax: 53.81775
+    CRS:           NA
+                                   x
+    1 LINESTRING (-3.03542 53.817...
+
+``` r
+links = gdf_list[[1]]
+
+links_to_sf = function(links) {
+    list_linstrings = lapply(links, link_coordinates)
+    # class(list_linstrings)
+    # qtm(list_linstrings[[2]])
+    # combine the sf linstrings into a single object:
+    # Note: inefficient implemenation TODO, make more efficient:
+    # sf_links = do.call(rbind, list_linstrings)
+    sf_links = mastermapr::fastrbindsf(list_linstrings)
+    return(sf_links)
+}
+links_sf = links_to_sf(gdf_list[[1]])
+class(links_sf)
+```
+
+    [1] "sf"         "data.frame"
+
+``` r
+qtm(links_sf)
+```
+
+    Warning: Currect projection of shape links_sf unknown. Long-lat (WGS84) is
+    assumed.
+
+![](README_files/figure-commonmark/unnamed-chunk-15-1.png)
+
+\`\`\`

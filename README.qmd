@@ -143,6 +143,8 @@ We'll use the following packages:
 library(sf)
 library(tmap)
 tmap_mode("view")
+# Install mastermapr dependency:
+remotes::install_github("acteng/mastermapr")
 ```
 
 ```{r}
@@ -173,7 +175,57 @@ qtm(sf_linestring)
 
 ## Iterate for all links and visualise network
 
+First we'll generalise the previous code to a function:
+
 ```{r}
+link_coordinates = function(link) {
+    # get origin and destination coordinates:
+    gdf_origin_coords = c(
+        link[[8]][[1]],
+        link[[8]][[2]]
+        )
+    gdf_destination_coords = c(
+        link[[9]][[1]],
+        link[[9]][[2]]
+        )
+    # create matrix of coordinates:
+    gdf_matrix = rbind(gdf_origin_coords, gdf_destination_coords)
+    # create linestring:
+    gdf_linestring = sf::st_linestring(gdf_matrix)
+    # create sfc:
+    sfc_linestring = sf::st_sfc(gdf_linestring)
+    # create sf:
+    sf_linestring = sf::st_as_sf(sfc_linestring)
+    return(sf_linestring)
+}
+# Test the function with the first link:
+link_coordinates(gdf_list[[1]][[1]])
+links = gdf_list[[1]]
+
+links_to_sf = function(links) {
+    list_linstrings = lapply(links, link_coordinates)
+    # class(list_linstrings)
+    # qtm(list_linstrings[[2]])
+    # combine the sf linstrings into a single object:
+    # Note: inefficient implemenation TODO, make more efficient:
+    # sf_links = do.call(rbind, list_linstrings)
+    sf_links = mastermapr::fastrbindsf(list_linstrings)
+    return(sf_links)
+}
+links_sf = links_to_sf(gdf_list[[1]])
+class(links_sf)
+qtm(links_sf)
+```
+
+```
+
+```{r}
+```
+
+```{r}
+
+```{r}
+
 ```
 
 ```{python}
