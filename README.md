@@ -169,26 +169,12 @@ We’ll use the following packages:
 
 ``` r
 library(sf)
-```
-
-    Linking to GEOS 3.11.1, GDAL 3.6.2, PROJ 9.1.1; sf_use_s2() is TRUE
-
-``` r
+library(tidyverse)
 library(tmap)
 tmap_mode("view")
-```
-
-    tmap mode set to interactive viewing
-
-``` r
 # Install mastermapr dependency:
 remotes::install_github("acteng/mastermapr")
 ```
-
-    Using github PAT from envvar GITHUB_PAT
-
-    Skipping install of 'mastermapr' from a github remote, the SHA1 (8ca6fd61) has not changed since last install.
-      Use `force = TRUE` to force installation
 
 ``` r
 gdf_list = jsonlite::read_json("data/AA_example_links.json")
@@ -396,7 +382,7 @@ links_to_df = function(links) {
 }
 
 # Function to get link attributes for all links:
-links_to_sf = function(links, subset_on = NULL, keep_n = Inf, keep_percent = 100) {
+links_to_sf = function(links, subset_on = NULL, keep_n = Inf, keep_percent = 100, pt_threshold = 100326060) {
     links_df = links_to_df(links)
     if(!is.null(subset_on)) {
         # indices of top keep_n items:
@@ -412,6 +398,11 @@ links_to_sf = function(links, subset_on = NULL, keep_n = Inf, keep_percent = 100
     # Create a spatial data frame:
     # class(links_sfc$x)
     links_sf = sf::st_sf(geometry = sf::st_geometry(links_sfc), links_df, crs = 4326)
+    links_sf$Mode = dplyr::case_when(
+        links_sf$start_node > pt_threshold ~ "Public Transport",
+        # TODO: add more rules
+        TRUE ~ "Walking"
+    )
     links_sf
 }
 links_sf = links_to_sf(gdf_list[[1]], keep_n = 1000, subset_on = "Business")
@@ -420,6 +411,7 @@ names(links_sf)
 
     [1] "Business"      "Education"     "Entertainment" "Shopping"     
     [5] "Visit friends" "start_node"    "end_node"      "geometry"     
+    [9] "Mode"         
 
 ``` r
 nrow(links_sf)
@@ -428,12 +420,50 @@ nrow(links_sf)
     [1] 1000
 
 ``` r
-tm_shape(links_sf) +
-  tm_lines(lwd = "Business", scale = 15)
+links_sf
+```
+
+    Simple feature collection with 1000 features and 8 fields
+    Geometry type: LINESTRING
+    Dimension:     XY
+    Bounding box:  xmin: -3.056599 ymin: 53.7539 xmax: -2.699855 ymax: 53.89763
+    Geodetic CRS:  WGS 84
+    First 10 features:
+       Business Education Entertainment Shopping Visit friends start_node end_node
+    1   7104814  39602559     332170990 24580720       6825380    5316487  5316487
+    2   3735821  31686031      35070227  8790479       3972056    7930709  3012266
+    3   3735821  31686031      35070227  8790479       3972456    5316487  7930709
+    4   3367393   7916528     297100763 15790241       2848524    5316487  6978669
+    5   3272355   7916528     294846579 15504904       2614398    6978669  4992079
+    6   3271456   7916528     294846579 15504904       2607668    2939396  2940429
+    7   3271456   7916528     294846579 15504904       2608460    5486333  2939396
+    8   3271456   7916528     294846579 15504904       2608757    4992079  4831161
+    9   3271456   7916528     294846579 15504904       2608460    4831161  5486333
+    10  3267190   7916528     294687831 15486214       2578868    2940429  8674904
+                             geometry    Mode
+    1  LINESTRING (-3.025506 53.82... Walking
+    2  LINESTRING (-3.025307 53.82... Walking
+    3  LINESTRING (-3.025506 53.82... Walking
+    4  LINESTRING (-3.025506 53.82... Walking
+    5  LINESTRING (-3.027342 53.82... Walking
+    6  LINESTRING (-3.029612 53.81... Walking
+    7  LINESTRING (-3.029411 53.81... Walking
+    8  LINESTRING (-3.028866 53.81... Walking
+    9  LINESTRING (-3.029273 53.81... Walking
+    10 LINESTRING (-3.030679 53.81... Walking
+
+## Style the network
+
+We can now visualise the network with the `tmap` package:
+
+``` r
+links_sf |>
+  mutate(across(Business:`Visit friends`, sqrt)) |>
+  tm_shape() +
+  tm_lines(lwd = "Business", scale = 15, col = "Mode", palette = "Set1") +
+  tm_scale_bar() 
 ```
 
     Legend for line widths not available in view mode.
 
-![](README_files/figure-commonmark/unnamed-chunk-16-1.png)
-
-## Style the network
+![](README_files/figure-commonmark/networkvis-1.png)

@@ -140,7 +140,9 @@ gdf = gpd.read_file('data/AA_example_links.json')
 We'll use the following packages:
 
 ```{r}
+#| message: false
 library(sf)
+library(tidyverse)
 library(tmap)
 tmap_mode("view")
 # Install mastermapr dependency:
@@ -256,7 +258,7 @@ links_to_df = function(links) {
 }
 
 # Function to get link attributes for all links:
-links_to_sf = function(links, subset_on = NULL, keep_n = Inf, keep_percent = 100) {
+links_to_sf = function(links, subset_on = NULL, keep_n = Inf, keep_percent = 100, pt_threshold = 100326060) {
     links_df = links_to_df(links)
     if(!is.null(subset_on)) {
         # indices of top keep_n items:
@@ -272,26 +274,30 @@ links_to_sf = function(links, subset_on = NULL, keep_n = Inf, keep_percent = 100
     # Create a spatial data frame:
     # class(links_sfc$x)
     links_sf = sf::st_sf(geometry = sf::st_geometry(links_sfc), links_df, crs = 4326)
+    links_sf$Mode = dplyr::case_when(
+        links_sf$start_node > pt_threshold ~ "Public Transport",
+        # TODO: add more rules
+        TRUE ~ "Walking"
+    )
     links_sf
 }
 links_sf = links_to_sf(gdf_list[[1]], keep_n = 1000, subset_on = "Business")
 names(links_sf)
 nrow(links_sf)
-tm_shape(links_sf) +
-  tm_lines(lwd = "Business", scale = 15)
+links_sf
 ```
 
 ## Style the network
 
+We can now visualise the network with the `tmap` package:
 
 
-```{r}
-```
-
-```{r}
-
-```{r}
-
+```{r networkvis}
+links_sf |>
+  mutate(across(Business:`Visit friends`, sqrt)) |>
+  tm_shape() +
+  tm_lines(lwd = "Business", scale = 15, col = "Mode", palette = "Set1") +
+  tm_scale_bar() 
 ```
 
 ```{python}
