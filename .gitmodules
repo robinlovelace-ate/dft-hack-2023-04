@@ -1,0 +1,6 @@
+[submodule "planning_tool"]
+	path = planning_tool
+	url = https://github.com/ADD-William-WaltersDavis/planning_tool
+[submodule "rust_connectivity_pt_tiles"]
+	path = rust_connectivity_pt_tiles
+	url = https://github.com/adam-jb/rust_connectivity_pt_tiles

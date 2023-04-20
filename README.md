@@ -2,6 +2,34 @@
 
 Notes from a hackathon.
 
+# Introduction
+
+This is a collection of notes from a hackathon held at the Alan Turing
+Institute in London on 2023-04-20.
+
+# Setup
+
+## Getting the code repos
+
+The starting point was two code repos:
+
+- Front end (note the use of PMTiles):
+  https://github.com/ADD-William-WaltersDavis/planning_tool
+- Backend code in Rust to get scores and routes for each square:
+  https://github.com/adam-jb/rust_connectivity_pt_tiles
+
+These repos were cloned from GitHub as follows:
+
+``` {bash}
+#| eval: false
+gh repo clone ADD-William-WaltersDavis/planning_tool
+gh repo clone adam-jb/rust_connectivity_pt_tiles
+
+# add the submodules
+git submodule add https://github.com/ADD-William-WaltersDavis/planning_tool planning_tool
+git submodule add https://github.com/adam-jb/rust_connectivity_pt_tiles rust_connectivity_pt_tiles
+```
+
 # Reading a .pickle file
 
 A starting point was files prepared for the event. These were copied to
