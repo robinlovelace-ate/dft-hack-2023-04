@@ -284,7 +284,10 @@ links_to_sf = function(links, subset_on = NULL, keep_n = Inf, keep_percent = 100
 links_sf = links_to_sf(gdf_list[[1]], keep_n = 1000, subset_on = "Business")
 names(links_sf)
 nrow(links_sf)
-links_sf
+links_sf |>
+  select(Business:`Visit friends`) |>
+  sf::st_drop_geometry() |>
+  summary()
 ```
 
 ## Style the network
@@ -297,6 +300,35 @@ links_sf |>
   mutate(across(Business:`Visit friends`, sqrt)) |>
   tm_shape() +
   tm_lines(lwd = "Business", scale = 15, col = "Mode", palette = "Set1") +
+  tm_scale_bar() 
+```
+
+```{r rnetbusiness}
+table(links_sf$Mode)
+links_sf |>
+  mutate(across(Business:`Visit friends`, sqrt)) |>
+  tm_shape() +
+  tm_lines(lwd = "Visit friends", scale = 15, col = "Mode", palette = "Set1") +
+  tm_scale_bar() 
+```
+
+```{r rnetfriends}
+links_sf_friends = links_to_sf(gdf_list[[1]], keep_n = 1000, subset_on = "Visit friends")
+table(links_sf_friends$Mode)
+links_sf_friends |>
+  mutate(across(Business:`Visit friends`, sqrt)) |>
+  tm_shape() +
+  tm_lines(lwd = "Visit friends", scale = 15, col = "Mode", palette = "Set1") +
+  tm_scale_bar() 
+```
+
+```{r rneteducation}
+links_sf_education = links_to_sf(gdf_list[[1]], keep_n = 1000, subset_on = "Education")
+table(links_sf_education$Mode)
+links_sf_education |>
+  mutate(across(Business:`Visit friends`, sqrt)) |>
+  tm_shape() +
+  tm_lines(lwd = "Education", scale = 15, col = "Mode", palette = "Set1") +
   tm_scale_bar() 
 ```
 

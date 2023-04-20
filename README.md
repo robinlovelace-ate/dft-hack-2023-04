@@ -420,37 +420,26 @@ nrow(links_sf)
     [1] 1000
 
 ``` r
-links_sf
+links_sf |>
+  select(Business:`Visit friends`) |>
+  sf::st_drop_geometry() |>
+  summary()
 ```
 
-    Simple feature collection with 1000 features and 8 fields
-    Geometry type: LINESTRING
-    Dimension:     XY
-    Bounding box:  xmin: -3.056599 ymin: 53.7539 xmax: -2.699855 ymax: 53.89763
-    Geodetic CRS:  WGS 84
-    First 10 features:
-       Business Education Entertainment Shopping Visit friends start_node end_node
-    1   7104814  39602559     332170990 24580720       6825380    5316487  5316487
-    2   3735821  31686031      35070227  8790479       3972056    7930709  3012266
-    3   3735821  31686031      35070227  8790479       3972456    5316487  7930709
-    4   3367393   7916528     297100763 15790241       2848524    5316487  6978669
-    5   3272355   7916528     294846579 15504904       2614398    6978669  4992079
-    6   3271456   7916528     294846579 15504904       2607668    2939396  2940429
-    7   3271456   7916528     294846579 15504904       2608460    5486333  2939396
-    8   3271456   7916528     294846579 15504904       2608757    4992079  4831161
-    9   3271456   7916528     294846579 15504904       2608460    4831161  5486333
-    10  3267190   7916528     294687831 15486214       2578868    2940429  8674904
-                             geometry    Mode
-    1  LINESTRING (-3.025506 53.82... Walking
-    2  LINESTRING (-3.025307 53.82... Walking
-    3  LINESTRING (-3.025506 53.82... Walking
-    4  LINESTRING (-3.025506 53.82... Walking
-    5  LINESTRING (-3.027342 53.82... Walking
-    6  LINESTRING (-3.029612 53.81... Walking
-    7  LINESTRING (-3.029411 53.81... Walking
-    8  LINESTRING (-3.028866 53.81... Walking
-    9  LINESTRING (-3.029273 53.81... Walking
-    10 LINESTRING (-3.030679 53.81... Walking
+        Business         Education        Entertainment          Shopping       
+     Min.   :  38870   Min.   :       0   Min.   :        0   Min.   :       0  
+     1st Qu.:  62706   1st Qu.:       0   1st Qu.:        0   1st Qu.:   63482  
+     Median : 121244   Median :   85536   Median :   170880   Median :  210789  
+     Mean   : 340392   Mean   : 1444212   Mean   : 14542133   Mean   : 1231064  
+     3rd Qu.: 247265   3rd Qu.:  829523   3rd Qu.:  3478100   3rd Qu.: 1370317  
+     Max.   :7104814   Max.   :39602559   Max.   :332170990   Max.   :24580720  
+     Visit friends    
+     Min.   :      0  
+     1st Qu.:  10883  
+     Median :  78818  
+     Mean   : 291217  
+     3rd Qu.: 233955  
+     Max.   :6825380  
 
 ## Style the network
 
@@ -467,3 +456,65 @@ links_sf |>
     Legend for line widths not available in view mode.
 
 ![](README_files/figure-commonmark/networkvis-1.png)
+
+``` r
+table(links_sf$Mode)
+```
+
+
+    Public Transport          Walking 
+                 190              810 
+
+``` r
+links_sf |>
+  mutate(across(Business:`Visit friends`, sqrt)) |>
+  tm_shape() +
+  tm_lines(lwd = "Visit friends", scale = 15, col = "Mode", palette = "Set1") +
+  tm_scale_bar() 
+```
+
+    Legend for line widths not available in view mode.
+
+![](README_files/figure-commonmark/rnetbusiness-1.png)
+
+``` r
+links_sf_friends = links_to_sf(gdf_list[[1]], keep_n = 1000, subset_on = "Visit friends")
+table(links_sf_friends$Mode)
+```
+
+
+    Public Transport          Walking 
+                 215              785 
+
+``` r
+links_sf_friends |>
+  mutate(across(Business:`Visit friends`, sqrt)) |>
+  tm_shape() +
+  tm_lines(lwd = "Visit friends", scale = 15, col = "Mode", palette = "Set1") +
+  tm_scale_bar() 
+```
+
+    Legend for line widths not available in view mode.
+
+![](README_files/figure-commonmark/rnetfriends-1.png)
+
+``` r
+links_sf_education = links_to_sf(gdf_list[[1]], keep_n = 1000, subset_on = "Education")
+table(links_sf_education$Mode)
+```
+
+
+    Public Transport          Walking 
+                 210              790 
+
+``` r
+links_sf_education |>
+  mutate(across(Business:`Visit friends`, sqrt)) |>
+  tm_shape() +
+  tm_lines(lwd = "Education", scale = 15, col = "Mode", palette = "Set1") +
+  tm_scale_bar() 
+```
+
+    Legend for line widths not available in view mode.
+
+![](README_files/figure-commonmark/rneteducation-1.png)
