@@ -202,7 +202,7 @@ link_coordinates = function(link) {
 link_coordinates(gdf_list[[1]][[1]])
 links = gdf_list[[1]]
 
-links_to_sf = function(links) {
+links_to_sfc = function(links) {
     list_linstrings = lapply(links, link_coordinates)
     # class(list_linstrings)
     # qtm(list_linstrings[[2]])
@@ -212,12 +212,78 @@ links_to_sf = function(links) {
     sf_links = mastermapr::fastrbindsf(list_linstrings)
     return(sf_links)
 }
-links_sf = links_to_sf(gdf_list[[1]])
+links_sf = links_to_sfc(gdf_list[[1]])
 class(links_sf)
 qtm(links_sf)
 ```
 
+## Get attribute data for links
+
+```{r}
+# Function to get link attributes
+# For testing:
+# link = gdf_list[[1]][[1]]
+link_attributes = function(
+    link,
+    attribute_names = c(
+        'Business',
+        'Education',
+        'Entertainment',
+        'Shopping',
+        'Visit friends',
+        'start_node',
+        'end_node',
+        'start_longlat',
+        'end_longlat'
+        )
+    ) {
+    # get origin and destination coordinates:
+    link_id = link[[1]]
+    link_length = link[[2]]
+    # Subset first 7 elements of list:
+    link_attributes = link[1:7]
+    # Create a data frame:
+    link_df = data.frame(link_attributes)
+    names(link_df) = attribute_names[1:7]
+    return(link_df)
+}
+# Test on a single link:
+link_attributes(gdf_list[[1]][[1]])
+
+links_to_df = function(links) {
+    list_dfs = pbapply::pblapply(links, link_attributes)
+    data.table::rbindlist(list_dfs)
+}
+
+# Function to get link attributes for all links:
+links_to_sf = function(links, subset_on = NULL, keep_n = Inf, keep_percent = 100) {
+    links_df = links_to_df(links)
+    if(!is.null(subset_on)) {
+        # indices of top keep_n items:
+        if(keep_n < nrow(links_df)) {
+            indices = order(links_df[[subset_on]],  decreasing = TRUE)
+            indices = indices[seq(keep_n)]
+            links_df = links_df[indices, ]
+        }
+        links_sfc = links_to_sfc(links[indices])
+    } else {
+        links_sfc = links_to_sfc(links)
+    }
+    # Create a spatial data frame:
+    # class(links_sfc$x)
+    links_sf = sf::st_sf(geometry = sf::st_geometry(links_sfc), links_df, crs = 4326)
+    links_sf
+}
+links_sf = links_to_sf(gdf_list[[1]], keep_n = 1000, subset_on = "Business")
+names(links_sf)
+nrow(links_sf)
+tm_shape(links_sf) +
+  tm_lines(lwd = "Business", scale = 15)
 ```
+
+## Style the network
+
+
 
 ```{r}
 ```
@@ -245,5 +311,3 @@ links[:10]
 
 ```{python}
 ```
-
-```{python}
